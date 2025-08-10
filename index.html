@@ -1,65 +1,108 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>Node.js CRUD Test</title>
-<style>
-body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; }
-input, textarea { width: 100%; margin: 5px 0; padding: 8px; }
-button { padding: 8px 12px; margin: 5px 0; }
-.item { border: 1px solid #ccc; padding: 10px; margin: 5px 0; }
-</style>
+    <meta charset="UTF-8">
+    <title>Node.js CRUD Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+        h1 {
+            text-align: center;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input, textarea, button {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px;
+            font-size: 14px;
+        }
+        .item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+        .item button {
+            margin-right: 5px;
+        }
+    </style>
 </head>
 <body>
-<h1>CRUD с Node.js + MySQL</h1>
+    <h1>Node.js CRUD Test</h1>
 
-<h3>Добавить элемент</h3>
-<input type="text" id="name" placeholder="Название">
-<textarea id="description" placeholder="Описание"></textarea>
-<button onclick="addItem()">Добавить</button>
+    <form id="itemForm">
+        <input type="hidden" id="itemId">
+        <input type="text" id="name" placeholder="Название" required>
+        <textarea id="description" placeholder="Описание"></textarea>
+        <button type="submit">Сохранить</button>
+    </form>
 
-<h3>Список элементов</h3>
-<div id="items"></div>
+    <div id="items"></div>
 
-<script>
-async function loadItems() {
-  const res = await fetch('/api/items');
-  const data = await res.json();
-  document.getElementById('items').innerHTML = data.map(item => `
-    <div class="item">
-      <b>${item.name}</b><br>${item.description}<br>
-      <button onclick="deleteItem(${item.id})">Удалить</button>
-      <button onclick="editItem(${item.id}, '${item.name.replace(/'/g, "\\'")}', '${(item.description || "").replace(/'/g, "\\'")}')">Изменить</button>
-    </div>
-  `).join('');
-}
+    <script>
+        const API_BASE = "http://node-js-test.bod-hub.kz:3000";
 
-async function addItem() {
-  const name = document.getElementById('name').value.trim();
-  const description = document.getElementById('description').value.trim();
-  if (!name) return alert("Введите название");
-  await fetch('/api/items', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, description }) });
-  document.getElementById('name').value = '';
-  document.getElementById('description').value = '';
-  loadItems();
-}
+        async function loadItems() {
+            const res = await fetch(`${API_BASE}/api/items`);
+            const data = await res.json();
+            const itemsDiv = document.getElementById("items");
+            itemsDiv.innerHTML = "";
+            data.forEach(item => {
+                const div = document.createElement("div");
+                div.className = "item";
+                div.innerHTML = `
+                    <strong>${item.name}</strong><br>
+                    <em>${item.description || ""}</em><br>
+                    <button onclick="editItem(${item.id}, '${item.name}', '${item.description || ""}')">✏️ Редактировать</button>
+                    <button onclick="deleteItem(${item.id})">🗑 Удалить</button>
+                `;
+                itemsDiv.appendChild(div);
+            });
+        }
 
-async function deleteItem(id) {
-  if (!confirm("Удалить этот элемент?")) return;
-  await fetch('/api/items/' + id, { method: 'DELETE' });
-  loadItems();
-}
+        document.getElementById("itemForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const id = document.getElementById("itemId").value;
+            const name = document.getElementById("name").value;
+            const description = document.getElementById("description").value;
 
-function editItem(id, oldName, oldDesc) {
-  const name = prompt('Название:', oldName);
-  const description = prompt('Описание:', oldDesc);
-  if (name && description !== null) {
-    fetch('/api/items/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, description }) })
-      .then(() => loadItems());
-  }
-}
+            if (id) {
+                await fetch(`${API_BASE}/api/items/${id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, description })
+                });
+            } else {
+                await fetch(`${API_BASE}/api/items`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, description })
+                });
+            }
+            document.getElementById("itemForm").reset();
+            loadItems();
+        });
 
-loadItems();
-</script>
+        async function deleteItem(id) {
+            if (confirm("Удалить элемент?")) {
+                await fetch(`${API_BASE}/api/items/${id}`, { method: "DELETE" });
+                loadItems();
+            }
+        }
+
+        function editItem(id, name, description) {
+            document.getElementById("itemId").value = id;
+            document.getElementById("name").value = name;
+            document.getElementById("description").value = description;
+        }
+
+        loadItems();
+    </script>
 </body>
 </html>
