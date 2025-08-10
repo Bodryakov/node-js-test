@@ -19,7 +19,7 @@ db.connect(err => {
     console.error("Ошибка подключения к БД:", err);
     process.exit(1);
   }
-  console.log("Подключено к MySQL");
+  console.log("✅ Подключено к MySQL");
 });
 
 // Мидлвары
@@ -32,15 +32,16 @@ db.query(`
   CREATE TABLE IF NOT EXISTS items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    description TEXT
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )
 `);
 
-// CRUD
+// === CRUD ===
 
 // Получить все записи
 app.get("/api/items", (req, res) => {
-  db.query("SELECT * FROM items", (err, results) => {
+  db.query("SELECT * FROM items ORDER BY id DESC", (err, results) => {
     if (err) return res.status(500).send(err);
     res.json(results);
   });
@@ -74,4 +75,4 @@ app.delete("/api/items/:id", (req, res) => {
   });
 });
 
-app.listen(PORT, () => console.log(`Сервер запущен на порту ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Сервер запущен на порту ${PORT}`));

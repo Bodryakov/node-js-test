@@ -29,19 +29,23 @@ async function loadItems() {
     <div class="item">
       <b>${item.name}</b><br>${item.description}<br>
       <button onclick="deleteItem(${item.id})">Удалить</button>
-      <button onclick="editItem(${item.id}, '${item.name}', '${item.description}')">Изменить</button>
+      <button onclick="editItem(${item.id}, '${item.name.replace(/'/g, "\\'")}', '${(item.description || "").replace(/'/g, "\\'")}')">Изменить</button>
     </div>
   `).join('');
 }
 
 async function addItem() {
-  const name = document.getElementById('name').value;
-  const description = document.getElementById('description').value;
+  const name = document.getElementById('name').value.trim();
+  const description = document.getElementById('description').value.trim();
+  if (!name) return alert("Введите название");
   await fetch('/api/items', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, description }) });
+  document.getElementById('name').value = '';
+  document.getElementById('description').value = '';
   loadItems();
 }
 
 async function deleteItem(id) {
+  if (!confirm("Удалить этот элемент?")) return;
   await fetch('/api/items/' + id, { method: 'DELETE' });
   loadItems();
 }
@@ -49,7 +53,7 @@ async function deleteItem(id) {
 function editItem(id, oldName, oldDesc) {
   const name = prompt('Название:', oldName);
   const description = prompt('Описание:', oldDesc);
-  if (name && description) {
+  if (name && description !== null) {
     fetch('/api/items/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, description }) })
       .then(() => loadItems());
   }
