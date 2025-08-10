@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 
 // Подключение к БД
 const db = mysql.createConnection({
-  host: "localhost",
+  host: "127.0.0.1",
   user: "p-351366_node-js-test",
   password: "Anna-140275",
   database: "p-351366_node-js-test"
@@ -27,15 +27,6 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(__dirname));
 
-// Создаём таблицу, если её нет
-db.query(`
-  CREATE TABLE IF NOT EXISTS items (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )
-`);
 
 // === CRUD ===
 
